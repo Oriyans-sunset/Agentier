@@ -1,0 +1,11 @@
+Customer ID,Email Address,Price ($),Region,Order Date
+1001, alice@EXAMPLE.COM ,"$1,200",North,2025-01-15
+1002,bob@example.com,850.50,south,01/22/2025
+1003,charlie@example,N/A,East,2025/02/03
+1004,,"$2,500.00",West ,"Feb 14, 2025"
+1005,dana@example.com,"1,050",N,2025-03-01
+1006,eve@example.com,-50,South,03-15-2025
+1007,frank@example.com,unknown,,2025-04-31
+1008,grace@example.com,$750,North,20250420
+1009,harry@example.com,900.75,West,April 25 2025
+1009,ian@example.com,"$1,100",Central,25/04/2025

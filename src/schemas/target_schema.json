@@ -1,0 +1,36 @@
+{
+  "columns": {
+    "number_of_columns": 5,
+    "customer_id": {
+      "type": "integer",
+      "nullable": false,
+      "unique": true,
+      "min": 1000,
+      "max": 999999
+    },
+    "email": {
+      "type": "string",
+      "nullable": false,
+      "unique": true,
+      "format": "email"
+    },
+    "price": {
+      "type": "float",
+      "nullable": false,
+      "min": 0,
+      "max": 100000
+    },
+    "region": {
+      "type": "string",
+      "nullable": false,
+      "allowed_values": ["North", "South", "East", "West"]
+    },
+    "order_date": {
+      "type": "date",
+      "nullable": false,
+      "format": "YYYY-MM-DD",
+      "min": "2020-01-01",
+      "max": "2030-12-31"
+    }
+  }
+}
