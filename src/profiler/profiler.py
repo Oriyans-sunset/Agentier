@@ -118,8 +118,16 @@ class Profiler:
                 "unique_value_count": len(column.unique())
                 }
             
-            if (("int" in str(column.dtype).lower()) or ("float" in str(column.dtype).lower()) or ("datetime" in str(column.dtype).lower())):
+            if (("int" in str(column.dtype).lower()) or ("float" in str(column.dtype).lower())):
                 self._profiled_schema["columns"][column_number]["min_value"] = column.min()
                 self._profiled_schema["columns"][column_number]["max_value"] = column.max()
+                self._profiled_schema["columns"][column_number]["mean"] = column.mean()
+                self._profiled_schema["columns"][column_number]["median"] = column.median()
+                self._profiled_schema["columns"][column_number]["standard_deviation"] = column.std()
 
-        print(self._profiled_schema)
+        
+        json_output = json.dumps(self._profiled_schema, default=lambda x: x.item() if hasattr(x, 'item') else str, indent=2)
+        print(json_output)
+        profiled_schema_path = os.path.join(os.path.dirname(__file__), "..", "schemas", "profiled_schema.json")
+        with open(profiled_schema_path, "w") as file:
+            file.write(json_output)

@@ -1,0 +1,170 @@
+{
+  "columns": {
+    "number_of_columns": 5,
+    "column_1": {
+      "name": "Customer ID",
+      "column_type_analysis": {
+        "pandas_dtype": "int64",
+        "manual_type_parsing_statistics": {
+          "integer": {
+            "success_count": 10,
+            "failure_count": 0,
+            "success_rate": 1.0
+          },
+          "float": {
+            "success_count": 10,
+            "failure_count": 0,
+            "success_rate": 1.0
+          },
+          "boolean": {
+            "success_count": 0,
+            "failure_count": 10,
+            "success_rate": 0.0
+          },
+          "date": {
+            "success_count": 10,
+            "failure_count": 0,
+            "success_rate": 1.0
+          }
+        }
+      },
+      "total_value_count": 10,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_value_count": 9,
+      "min_value": 1001,
+      "max_value": 1009,
+      "mean": 1005.4,
+      "median": 1005.5,
+      "standard_deviation": 2.8751811537130436
+    },
+    "column_2": {
+      "name": "Email Address",
+      "column_type_analysis": {
+        "pandas_dtype": "str",
+        "manual_type_parsing_statistics": {
+          "integer": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "float": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "boolean": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "date": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          }
+        }
+      },
+      "total_value_count": 10,
+      "null_count": 1,
+      "null_percentage": 0.1,
+      "unique_value_count": 10
+    },
+    "column_3": {
+      "name": "Price ($)",
+      "column_type_analysis": {
+        "pandas_dtype": "str",
+        "manual_type_parsing_statistics": {
+          "integer": {
+            "success_count": 1,
+            "failure_count": 8,
+            "success_rate": 0.1111111111111111
+          },
+          "float": {
+            "success_count": 3,
+            "failure_count": 6,
+            "success_rate": 0.3333333333333333
+          },
+          "boolean": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "date": {
+            "success_count": 1,
+            "failure_count": 8,
+            "success_rate": 0.1111111111111111
+          }
+        }
+      },
+      "total_value_count": 10,
+      "null_count": 1,
+      "null_percentage": 0.1,
+      "unique_value_count": 10
+    },
+    "column_4": {
+      "name": "Region",
+      "column_type_analysis": {
+        "pandas_dtype": "str",
+        "manual_type_parsing_statistics": {
+          "integer": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "float": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "boolean": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          },
+          "date": {
+            "success_count": 0,
+            "failure_count": 9,
+            "success_rate": 0.0
+          }
+        }
+      },
+      "total_value_count": 10,
+      "null_count": 1,
+      "null_percentage": 0.1,
+      "unique_value_count": 9
+    },
+    "column_5": {
+      "name": "Order Date",
+      "column_type_analysis": {
+        "pandas_dtype": "str",
+        "manual_type_parsing_statistics": {
+          "integer": {
+            "success_count": 1,
+            "failure_count": 9,
+            "success_rate": 0.1
+          },
+          "float": {
+            "success_count": 1,
+            "failure_count": 9,
+            "success_rate": 0.1
+          },
+          "boolean": {
+            "success_count": 0,
+            "failure_count": 10,
+            "success_rate": 0.0
+          },
+          "date": {
+            "success_count": 9,
+            "failure_count": 1,
+            "success_rate": 0.9
+          }
+        }
+      },
+      "total_value_count": 10,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_value_count": 10
+    }
+  }
+}
