@@ -1,17 +1,29 @@
+import contextlib
+import io
 import json
 from datetime import datetime
 
+import numpy as np
+import pandas as pd
 from langchain_core.tools import tool
 
 
 class Tools:
-    def __init__(self, file: str):
+    def __init__(self, file: str, csv_path: str):
         self.file = file
+        self.csv_path = csv_path
         try:
             with open(self.file) as f:
                 self._profiled_schema = json.load(f)["columns"]
         except Exception as e:
             raise Exception(e)
+        self._df = pd.read_csv(self.csv_path)
+        self._exec_namespace = {
+            "df": self._df.copy(),
+            "pd": pd,
+            "np": np,
+            "__builtins__": __builtins__,
+        }
 
     def get_all_tools(self) -> list:
         return [
@@ -53,8 +65,43 @@ class Tools:
         return _get_column_info
 
     @property
-    def execute_python(code: str):
-        pass
+    def execute_python(self):
+        ns = self._exec_namespace
+        original_df = self._df.copy()
+
+        @tool
+        def _execute_python(code: str) -> str:
+            """Execute a Python code snippet to analyse the dataset.
+
+            The variable `df` is a pandas DataFrame of the raw CSV, available in
+            the execution namespace. Treat `df` as immutable — do not modify it
+            in place. You may create derived DataFrames, Series, variables, and
+            intermediate analysis results (e.g. df_clean = df.copy()). These
+            objects persist across execute_python calls and may be reused in
+            subsequent investigations.
+
+            `pd` (pandas) and `np` (numpy) are also available.
+
+            Print any results you want returned; the tool captures stdout and
+            returns it as a string. Exceptions are caught and returned as an
+            error message.
+
+            Example:
+                df_prices = df['price'].dropna()
+                print(df_prices.describe())
+            """
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    exec(code, ns)  # noqa: S102
+                output = buf.getvalue()
+            except Exception as e:
+                output = f"Error: {type(e).__name__}: {e}"
+            finally:
+                ns["df"] = original_df.copy()
+            return output if output.strip() else "(no output)"
+
+        return _execute_python
 
     @staticmethod
     @tool

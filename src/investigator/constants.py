@@ -1,6 +1,7 @@
 import os
 import json
 
+LOG_PATH = os.path.join(os.path.dirname(__file__), "logs", "investigator_logs.json")
 MODEL = "claude-sonnet-5"
 DATA_SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "fake-data", "data.csv")
 PROFILED_SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "schemas", "profiled_schema.json")
