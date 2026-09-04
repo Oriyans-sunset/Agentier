@@ -21,7 +21,7 @@ class Profiler:
         try:
             number = float(str(value).strip())
 
-            # 10.0 is integer-compatible, 10.5 isn't
+            # 10.0 is integer-compatible, 10.5 isnt
             return number.is_integer()
         except (ValueError, TypeError):
             return False

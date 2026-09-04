@@ -1,0 +1,136 @@
+{
+  "findings": [
+    {
+      "column": "Customer ID",
+      "issue": "Duplicate identifier with different associated records",
+      "description": "Customer ID 1009 appears twice (rows 8 and 9), each with a different email address (harry@example.com vs ian@example.com), different price, and different order date. This suggests either a duplicate/erroneous ID assignment or two distinct customers incorrectly sharing an ID.",
+      "evidence": {
+        "duplicate_id": 1009,
+        "row_8": {
+          "email": "harry@example.com",
+          "price": "900.75",
+          "date": "April 25 2025"
+        },
+        "row_9": {
+          "email": "ian@example.com",
+          "price": "$1,100",
+          "date": "25/04/2025"
+        }
+      },
+      "severity": "high",
+      "confidence": 0.9,
+      "potentially_safely_fixable": false,
+      "reasoning": "If Customer ID is meant to be a unique key, this violates uniqueness. Since the two rows represent clearly different customers (different emails/dates/prices), the correct fix (reassigning a new ID) cannot be inferred safely from existing data and requires human/business input."
+    },
+    {
+      "column": "Price ($)",
+      "issue": "Inconsistent numeric formatting mixing currency symbols, thousands separators, plain numbers, and non-numeric placeholder text",
+      "description": "The Price column contains at least 5 different representations: '$1,200', '850.50', '$2,500.00', '1,050', '-50', 'unknown', '$750', '900.75', '$1,100', plus 1 null. The literal string 'unknown' is used as a non-numeric missing-value placeholder rather than a true null, and one value (-50) is negative.",
+      "evidence": {
+        "raw_values": [
+          "$1,200",
+          "850.50",
+          "NaN",
+          "$2,500.00",
+          "1,050",
+          "-50",
+          "unknown",
+          "$750",
+          "900.75",
+          "$1,100"
+        ]
+      },
+      "severity": "high",
+      "confidence": 0.95,
+      "potentially_safely_fixable": true,
+      "reasoning": "Currency symbols and thousands separators can likely be stripped safely to produce a consistent float column. However, 'unknown' cannot be parsed and should be treated as a missing value rather than fabricated, and the negative value (-50) is implausible for a price and should be flagged rather than silently coerced."
+    },
+    {
+      "column": "Price ($)",
+      "issue": "Negative price value",
+      "description": "Row 5 (Customer ID 1006) has a price of -50, which is not a plausible value for a monetary price field.",
+      "evidence": {
+        "row_index": 5,
+        "customer_id": 1006,
+        "value": "-50"
+      },
+      "severity": "medium",
+      "confidence": 0.85,
+      "potentially_safely_fixable": false,
+      "reasoning": "A negative price is very likely a data-entry error (e.g. sign typo) or represents a refund/adjustment rather than a sale price, but the true intended value cannot be determined from the data alone."
+    },
+    {
+      "column": "Order Date",
+      "issue": "Multiple inconsistent date formats used within the same column, including an impossible calendar date",
+      "description": "Order Date contains at least 7 distinct formats across 10 rows: ISO (2025-01-15), US slash (01/22/2025), reversed ISO-slash (2025/02/03), long month-day-year with comma (Feb 14, 2025), dash US format (03-15-2025), compact YYYYMMDD (20250420), long month name without comma (April 25 2025), and day/month/year slash (25/04/2025). One value, '2025-04-31', is not a valid calendar date since April has only 30 days.",
+      "evidence": {
+        "raw_values": [
+          "2025-01-15",
+          "01/22/2025",
+          "2025/02/03",
+          "Feb 14, 2025",
+          "2025-03-01",
+          "03-15-2025",
+          "2025-04-31",
+          "20250420",
+          "April 25 2025",
+          "25/04/2025"
+        ],
+        "invalid_date": "2025-04-31 (April has only 30 days)"
+      },
+      "severity": "high",
+      "confidence": 0.95,
+      "potentially_safely_fixable": true,
+      "reasoning": "Most formats are unambiguously parseable individually (e.g. day/month values >12 disambiguate order), so a per-value parser could normalize most rows, but the invalid date 2025-04-31 has no safe unambiguous correction (could be a typo for 03-31, 04-30, 04-01, etc.) and must be flagged rather than guessed."
+    },
+    {
+      "column": "Order Date",
+      "issue": "Ambiguous day/month ordering in some slash-formatted dates",
+      "description": "Row 9 has '25/04/2025' which, taken in isolation, could be interpreted as DD/MM/YYYY (April 25) but is inconsistent with row 1's '01/22/2025' which must be MM/DD/YYYY (since 22 cannot be a month). This confirms the column mixes at least two different date conventions rather than a single consistent format.",
+      "evidence": {
+        "row_1": "01/22/2025 (must be MM/DD/YYYY)",
+        "row_9": "25/04/2025 (must be DD/MM/YYYY)"
+      },
+      "severity": "medium",
+      "confidence": 0.85,
+      "potentially_safely_fixable": true,
+      "reasoning": "Because both rows contain values >12 in different positions, the ordering can be disambiguated per-row, but this confirms the source data was entered/exported using inconsistent regional date conventions, which risks misinterpretation if a single global parsing rule is applied to the whole column."
+    },
+    {
+      "column": "Region",
+      "issue": "Inconsistent categorical values: casing differences, abbreviations, and stray whitespace",
+      "description": "Region contains 9 unique raw values for what appears to be a small set of categories: 'North', 'South'/'south', 'East', 'West'/'West ' (trailing space), 'N' (likely abbreviation for North), 'Central', and 1 null. This inflates the apparent cardinality of a categorical column.",
+      "evidence": {
+        "unique_values": [
+          "North",
+          "south",
+          "East",
+          "West ",
+          "N",
+          "South",
+          "West",
+          "Central",
+          null
+        ]
+      },
+      "severity": "medium",
+      "confidence": 0.85,
+      "potentially_safely_fixable": true,
+      "reasoning": "Case normalization and whitespace trimming can be applied safely. The single-letter 'N' is very likely shorthand for 'North' given the region naming pattern, but this is an inference rather than a certainty, and 'Central' is a new category not seen elsewhere, so the full category set is unclear."
+    },
+    {
+      "column": "Email Address",
+      "issue": "Invalid/malformed email format and inconsistent casing/whitespace",
+      "description": "Row 2's email 'charlie@example' lacks a top-level domain (e.g. '.com') and is not a valid email address. Row 0's email ' alice@EXAMPLE.COM ' contains leading/trailing whitespace and inconsistent domain casing. One row (Customer ID 1004) has a null email.",
+      "evidence": {
+        "invalid_email": "charlie@example",
+        "whitespace_case_example": " alice@EXAMPLE.COM ",
+        "null_count": 1
+      },
+      "severity": "medium",
+      "confidence": 0.9,
+      "potentially_safely_fixable": true,
+      "reasoning": "Whitespace trimming and case normalization for the domain are safe transformations, but the malformed email 'charlie@example' cannot be safely corrected (the intended TLD is unknown) and the null email has no derivable replacement value."
+    }
+  ]
+}

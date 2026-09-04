@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode
 from investigator.tools import Tools
 from investigator.models import InvestigationResult
-from investigator.constants import SYSTEM_PROMPT, MODEL, DATA_SCHEMA_PATH, PROFILED_SCHEMA_PATH, TARGET_SCHEMA_PATH, LOG_PATH
+from investigator.constants import SYSTEM_PROMPT, MODEL, DATA_SCHEMA_PATH, PROFILED_SCHEMA_PATH, INVESTIGATION_RESULT_PATH, LOG_PATH
 from investigator.logger import InvestigatorLogger
 
 load_dotenv()
@@ -111,6 +111,8 @@ class InvestigatorAgent:
         if final_call is not None:
             investigation_result = InvestigationResult(**final_call["args"])
             _logger.end_session(findings_count=len(investigation_result.findings))
+            with open(INVESTIGATION_RESULT_PATH, "w") as f:
+                f.write(investigation_result.model_dump_json(indent=2))
             print(investigation_result.model_dump_json(indent=2))
             return investigation_result
 

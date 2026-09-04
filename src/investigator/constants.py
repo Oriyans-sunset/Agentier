@@ -6,6 +6,7 @@ MODEL = "claude-sonnet-5"
 DATA_SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "fake-data", "data.csv")
 PROFILED_SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "schemas", "profiled_schema.json")
 TARGET_SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "schemas", "target_schema.json")
+INVESTIGATION_RESULT_PATH = os.path.join(os.path.dirname(__file__), "..", "schemas", "findings.json")
 
 PROFILED_SCHEMA = None
 TARGET_SCHEMA = None

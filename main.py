@@ -1,4 +1,4 @@
-from investigator.InvestigatorAgent import InvestigatorAgent
+from investigator.investigator_agent import InvestigatorAgent
 from profiler.profiler import Profiler
 
 if __name__ == "__main__":
