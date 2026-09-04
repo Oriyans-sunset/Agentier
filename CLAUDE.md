@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Agentier is a self-correcting data-cleaning pipeline built on LangGraph + Claude. It profiles a CSV dataset, investigates data quality issues against a target schema, and prepares findings for downstream planning/execution agents.
 
-The pipeline currently has two stages implemented:
+The pipeline currently has three stages implemented:
 1. **Profiler** — deterministic statistical analysis of the CSV
 2. **Investigator Agent** — LLM-driven investigation of data quality issues against a target schema
+3. **Fixer Agent** — scaffold wired; applies fixes based on investigation findings (tools not yet implemented)
 
 ## Commands
 
@@ -22,7 +23,7 @@ uv sync
 uv run python main.py
 
 # Run a specific module directly
-uv run python -c "from src.investigator.InvestigatorAgent import InvestigatorAgent; InvestigatorAgent().run_agent()"
+uv run python -c "from src.investigator.investigator_agent import InvestigatorAgent; InvestigatorAgent().run_agent()"
 ```
 
 The project has no test suite yet. There is no lint or format toolchain configured.
@@ -38,20 +39,24 @@ src/profiler/profiler.py (Profiler class)
         ↓ writes
 src/schemas/profiled_schema.json
         ↓
-src/investigator/InvestigatorAgent.py
+src/investigator/investigator_agent.py
         ↓ uses
 src/schemas/target_schema.json  (desired output schema)
-        ↓ produces
-InvestigationResult (structured findings via Pydantic)
+        ↓ writes
+src/schemas/findings.json
+        ↓
+src/fixer/fixer_agent.py
+        ↓ writes
+src/schemas/fixer_response.json
 ```
 
-`main.py` is the entry point; currently it runs only the `Profiler`. The `run_agent()` call for the main agent in `src/agentier/agent.py` is commented out.
+`main.py` is the entry point; currently it runs only the `Profiler` and `InvestigatorAgent`. The `run_agent()` call for the main agent in `src/agentier/agent.py` is commented out.
 
 ### Key Modules
 
 **`src/profiler/profiler.py`** — Pure Python/pandas class. Reads `data.csv`, computes per-column statistics (dtype, null counts, min/max/mean/median/stddev, unique counts, type-parsing success rates for integer/float/boolean/date). Writes results to `src/schemas/profiled_schema.json`.
 
-**`src/investigator/InvestigatorAgent.py`** — LangGraph `StateGraph` wired as a tool-calling loop. Uses `claude-sonnet-5` with extended thinking (8000 token budget). The agent calls tools to investigate the CSV, then terminates by calling `InvestigationResult` as a structured output "tool" (not a real tool — the router catches it and exits to `END` instead of passing it to `ToolNode`).
+**`src/investigator/investigator_agent.py`** — LangGraph `StateGraph` wired as a tool-calling loop. Uses `claude-sonnet-5` with extended thinking (8000 token budget). The agent calls tools to investigate the CSV, terminates by calling `InvestigationResult` as a structured exit "tool", then writes findings to `src/schemas/findings.json`.
 
 **`src/investigator/tools.py`** — `Tools` class instantiated with the profiled schema path. Schema-aware tools (`get_all_columns`, `get_column_info`) are defined as properties that close over the loaded schema. Also exposes `execute_python` (stub — not yet implemented), `calculator`, `write_and_edit_file`, `get_current_time`.
 
@@ -59,20 +64,29 @@ InvestigationResult (structured findings via Pydantic)
 
 **`src/investigator/constants.py`** — Loads `PROFILED_SCHEMA` and `TARGET_SCHEMA` at import time. Contains the full investigator `SYSTEM_PROMPT` with schema values interpolated. If `profiled_schema.json` doesn't exist (i.e., Profiler hasn't run), this import will fail.
 
+**`src/investigator/logger.py`** / **`src/fixer/logger.py`** — `InvestigatorLogger` / `FixerLogger` classes. Each agent wraps `ToolNode` in a `logged_tools` function that records tool name, input args, output, status, timestamps, and duration (ms) to a JSON log file (`logs/investigator_logs.json` / `logs/fixer_logs.json`).
+
+**`src/fixer/fixer_agent.py`** — Same LangGraph topology as the investigator. Reads `findings.json`, terminates by calling `FixerResult` as the structured exit signal, and writes output to `src/schemas/fixer_response.json`. Tools are placeholder stubs.
+
+**`src/fixer/models.py`** — `FixerResult` with `status` (`"success"` | `"failure"`) and `message`.
+
 **`src/agentier/agent.py`** — Earlier, simpler agent using `claude-sonnet-4-5` with thinking enabled. Uses `MemorySaver` for session persistence via `thread_id`. Currently incomplete/unused.
 
 ### LangGraph Graph Pattern
 
-Both agents share the same graph topology:
+All agents share the same graph topology:
 - `START → chat → tools → chat → … → END`
 - `chat` node: prepend system message, invoke LLM with bound tools
 - Conditional edge after `chat`: if tool calls → `tools`, else → `END`
-- The Investigator overrides the condition to also route `InvestigationResult` tool calls to `END` (since it is used as a structured exit signal, not dispatched to `ToolNode`)
+- The result model (`InvestigationResult` / `FixerResult`) is bound as a tool but routed to `END` — the router catches it before it reaches `ToolNode`
+- `tools` node is a `logged_tools` wrapper around `ToolNode` that records per-call timing and status to a JSON log file
 
 ### Schemas
 
 - `src/schemas/target_schema.json` — hand-authored; defines the desired column types, nullability, uniqueness, value ranges, and allowed values for the 5-column dataset (`customer_id`, `email`, `price`, `region`, `order_date`).
 - `src/schemas/profiled_schema.json` — generated by `Profiler.generate_profiled_schema()`; must exist before `InvestigatorAgent` can be imported.
+- `src/schemas/findings.json` — written by `InvestigatorAgent.run_agent()`; must exist before `FixerAgent` can run.
+- `src/schemas/fixer_response.json` — written by `FixerAgent.run_agent()`.
 
 ### Environment
 
